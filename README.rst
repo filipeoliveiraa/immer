@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ffilipeoliveiraa%2Fimmer.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Ffilipeoliveiraa%2Fimmer?ref=badge_shield)
+
 
 .. image:: https://travis-ci.org/arximboldi/immer.svg?branch=master
    :target: https://travis-ci.org/arximboldi/immer
@@ -221,3 +223,6 @@ License
 The full text of the license is can be accessed `via this link
 <http://boost.org/LICENSE_1_0.txt>`_ and is also included
 in the ``LICENSE`` file of this software package.
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ffilipeoliveiraa%2Fimmer.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Ffilipeoliveiraa%2Fimmer?ref=badge_large)
