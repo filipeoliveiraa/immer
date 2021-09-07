@@ -1,3 +1,4 @@
 git+https://github.com/arximboldi/sphinx.git
 git+https://github.com/arximboldi/breathe.git
 recommonmark
+pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
