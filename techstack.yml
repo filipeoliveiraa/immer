@@ -2,7 +2,7 @@ repo_name: filipeoliveiraa/immer
 report_id: cd737561ce1e6db7d7fbf84c9dcd67cf
 version: 0.1
 repo_type: Public
-timestamp: '2024-02-04T23:14:50+00:00'
+timestamp: '2024-02-29T19:54:22+00:00'
 requested_by: filipeoliveiraa
 provider: github
 branch: master
@@ -73,7 +73,7 @@ tools:
   detection_source_url: https://github.com/filipeoliveiraa/immer
   detection_source: Repo Metadata
 - name: CMake
-  description: 'An open-source system that manages the build process '
+  description: An open-source system that manages the build process
   website_url: http://www.cmake.org/
   open_source: false
   hosted_saas: false
@@ -116,7 +116,7 @@ tools:
   detection_source_url: https://github.com/filipeoliveiraa/immer
   detection_source: Repo Metadata
 - name: Nix
-  description: 'A package manager for Linux and other Unix systems '
+  description: A package manager for Linux and other Unix systems
   website_url: http://nixos.org/nix
   license: LGPL-2.1
   open_source: true
