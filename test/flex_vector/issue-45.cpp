@@ -13,13 +13,14 @@
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #if IMMER_CXX_STANDARD >= 17
 
 #include <variant>
 
-TEST_CASE("error when erasing an element from a immer::flex_vector<std::variant/optional/any>")
+TEST_CASE("error when erasing an element from a "
+          "immer::flex_vector<std::variant/optional/any>")
 {
     using Vector = immer::flex_vector<std::variant<int, double>>;
     // using Vector = immer::flex_vector<std::optional<int>>;
@@ -32,3 +33,8 @@ TEST_CASE("error when erasing an element from a immer::flex_vector<std::variant/
 }
 
 #endif
+
+TEST_CASE(
+    "empty test because it's not allowed to have no tests in the cpp file")
+{
+}

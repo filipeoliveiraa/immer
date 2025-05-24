@@ -11,8 +11,8 @@
 #include <immer/refcount/no_refcount_policy.hpp>
 
 #include <atomic>
-#include <utility>
 #include <cassert>
+#include <utility>
 
 namespace immer {
 
@@ -24,29 +24,18 @@ struct refcount_policy
 {
     mutable std::atomic<int> refcount;
 
-    refcount_policy() : refcount{1} {};
-    refcount_policy(disowned) : refcount{0} {}
-
-    void inc()
+    refcount_policy()
+        : refcount{1} {};
+    refcount_policy(disowned)
+        : refcount{0}
     {
-        refcount.fetch_add(1, std::memory_order_relaxed);
     }
 
-    bool dec()
-    {
-        return 1 == refcount.fetch_sub(1, std::memory_order_acq_rel);
-    }
+    void inc() { refcount.fetch_add(1, std::memory_order_relaxed); }
 
-    void dec_unsafe()
-    {
-        assert(refcount.load() > 1);
-        refcount.fetch_sub(1, std::memory_order_relaxed);
-    }
+    bool dec() { return 1 == refcount.fetch_sub(1, std::memory_order_acq_rel); }
 
-    bool unique()
-    {
-        return refcount == 1;
-    }
+    bool unique() { return refcount == 1; }
 };
 
 } // namespace immer

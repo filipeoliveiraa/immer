@@ -7,19 +7,19 @@
 //
 
 #include "test/dada.hpp"
-#include "test/util.hpp"
 #include "test/transient_tester.hpp"
+#include "test/util.hpp"
 
 #include <immer/algorithm.hpp>
 
-#include <catch.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/irange.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
+#include <array>
 #include <numeric>
 #include <vector>
-#include <array>
 
 #ifndef FLEX_VECTOR_T
 #error "define the vector template to use in FLEX_VECTOR_T"
@@ -33,7 +33,12 @@
 #error "define the vector template to use in VECTOR_T"
 #endif
 
-template <typename V=VECTOR_T<unsigned>>
+IMMER_RANGES_CHECK(
+    std::ranges::random_access_range<FLEX_VECTOR_T<std::string>>);
+IMMER_RANGES_CHECK(
+    std::ranges::random_access_range<FLEX_VECTOR_TRANSIENT_T<std::string>>);
+
+template <typename V = VECTOR_T<unsigned>>
 auto make_test_flex_vector(unsigned min, unsigned max)
 {
     auto v = V{};
@@ -42,7 +47,7 @@ auto make_test_flex_vector(unsigned min, unsigned max)
     return v;
 }
 
-template <typename V=FLEX_VECTOR_T<unsigned>>
+template <typename V = FLEX_VECTOR_T<unsigned>>
 auto make_test_flex_vector_front(unsigned min, unsigned max)
 {
     auto v = V{};
@@ -65,11 +70,11 @@ TEST_CASE("from flex_vector and to flex_vector")
 TEST_CASE("adopt regular vector contents")
 {
     const auto n = 666u;
-    auto v = VECTOR_T<unsigned>{};
+    auto v       = VECTOR_T<unsigned>{};
     for (auto i = 0u; i < n; ++i) {
-        v = v.push_back(i);
+        v       = v.push_back(i);
         auto fv = FLEX_VECTOR_TRANSIENT_T<unsigned>{v.transient()};
-        CHECK_VECTOR_EQUALS_AUX(v, fv, [] (auto&& v) { return &v; });
+        CHECK_VECTOR_EQUALS_AUX(v, fv, [](auto&& v) { return &v; });
     }
 }
 
@@ -79,7 +84,7 @@ TEST_CASE("drop move")
 
     auto v = vector_t{};
 
-    auto check_move = [&] (vector_t&& x) -> vector_t&& {
+    auto check_move = [&](vector_t&& x) -> vector_t&& {
         if (vector_t::memory_policy::use_transient_rvalues)
             CHECK(&x == &v);
         else
@@ -90,8 +95,8 @@ TEST_CASE("drop move")
     v = v.push_back(0).push_back(1);
 
     auto addr_before = &v[0];
-    v = check_move(std::move(v).drop(1));
-    auto addr_after = &v[0];
+    v                = check_move(std::move(v).drop(1));
+    auto addr_after  = &v[0];
 
     if (vector_t::bits_leaf > 0 &&
         vector_t::memory_policy::use_transient_rvalues)
@@ -104,13 +109,14 @@ TEST_CASE("drop move")
 
 TEST_CASE("exception safety relaxed")
 {
-    using dadaist_vector_t = typename dadaist_wrapper<FLEX_VECTOR_T<unsigned>>::type;
+    using dadaist_vector_t =
+        typename dadaist_wrapper<FLEX_VECTOR_T<unsigned>>::type;
     constexpr auto n = 667u;
 
     SECTION("push back")
     {
         auto half = n / 2;
-        auto t = as_transient_tester(
+        auto t    = as_transient_tester(
             make_test_flex_vector_front<dadaist_vector_t>(0, half));
         auto d = dadaism{};
         for (auto li = half, i = half; i < n;) {
@@ -121,7 +127,8 @@ TEST_CASE("exception safety relaxed")
                 else
                     t.vp = t.vp.push_back({i});
                 ++i;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.step())
                 li = i;
             if (t.transient) {
@@ -140,8 +147,8 @@ TEST_CASE("exception safety relaxed")
 
     SECTION("update")
     {
-        using boost::join;
         using boost::irange;
+        using boost::join;
 
         auto t = as_transient_tester(
             make_test_flex_vector_front<dadaist_vector_t>(0, n));
@@ -150,20 +157,25 @@ TEST_CASE("exception safety relaxed")
             auto s = d.next();
             try {
                 if (t.transient) {
-                    t.vt.update(i, [] (auto x) { return dada(), x + 1; });
+                    t.vt.update(i, [](auto x) { return dada(), x + 1; });
                 } else {
-                    t.vp = t.vp.update(i, [] (auto x) { return dada(), x + 1; });
+                    t.vp = t.vp.update(i, [](auto x) { return dada(), x + 1; });
                 }
                 ++i;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.step())
                 li = i;
             if (t.transient) {
-                CHECK_VECTOR_EQUALS(t.vt, join(irange(1u, 1u + i), irange(i, n)));
-                CHECK_VECTOR_EQUALS(t.vp, join(irange(1u, 1u + li), irange(li, n)));
+                CHECK_VECTOR_EQUALS(t.vt,
+                                    join(irange(1u, 1u + i), irange(i, n)));
+                CHECK_VECTOR_EQUALS(t.vp,
+                                    join(irange(1u, 1u + li), irange(li, n)));
             } else {
-                CHECK_VECTOR_EQUALS(t.vp, join(irange(1u, 1u + i), irange(i, n)));
-                CHECK_VECTOR_EQUALS(t.vt, join(irange(1u, 1u + li), irange(li, n)));
+                CHECK_VECTOR_EQUALS(t.vp,
+                                    join(irange(1u, 1u + i), irange(i, n)));
+                CHECK_VECTOR_EQUALS(t.vt,
+                                    join(irange(1u, 1u + li), irange(li, n)));
             }
         }
         CHECK(d.happenings > 0);
@@ -174,7 +186,7 @@ TEST_CASE("exception safety relaxed")
     {
         auto t = as_transient_tester(
             make_test_flex_vector_front<dadaist_vector_t>(0, n));
-        auto d = dadaism{};
+        auto d      = dadaism{};
         auto deltas = magic_rotator();
         auto delta  = deltas.next();
         for (auto i = n, li = i;;) {
@@ -191,7 +203,8 @@ TEST_CASE("exception safety relaxed")
                 if (i < delta)
                     break;
                 i -= delta;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
                 CHECK_VECTOR_EQUALS(t.vt, boost::irange(0u, i + delta));
                 CHECK_VECTOR_EQUALS(t.vp, boost::irange(0u, li));
@@ -206,9 +219,9 @@ TEST_CASE("exception safety relaxed")
 
     SECTION("drop")
     {
-        auto t = as_transient_tester(
-            make_test_flex_vector<dadaist_vector_t>(0, n));
-        auto d = dadaism{};
+        auto t =
+            as_transient_tester(make_test_flex_vector<dadaist_vector_t>(0, n));
+        auto d      = dadaism{};
         auto deltas = magic_rotator();
         auto delta  = deltas.next();
         for (auto i = delta, li = 0u; i < n;) {
@@ -224,7 +237,8 @@ TEST_CASE("exception safety relaxed")
                 }
                 delta = deltas.next();
                 i += delta;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
                 CHECK_VECTOR_EQUALS(t.vt, boost::irange(i - delta, n));
                 CHECK_VECTOR_EQUALS(t.vp, boost::irange(li, n));
@@ -243,26 +257,27 @@ TEST_CASE("exception safety relaxed")
             auto d = dadaism::disable();
             return make_test_flex_vector<dadaist_vector_t>(i, i + delta);
         };
-        auto t = as_transient_tester(dadaist_vector_t{});
-        auto d = dadaism();
+        auto t      = as_transient_tester(dadaist_vector_t{});
+        auto d      = dadaism();
         auto deltas = magic_rotator();
         auto delta  = deltas.next();
         for (auto i = 0u, li = 0u; i < n;) {
             try {
                 if (t.transient) {
-                    auto data = make_(i, delta);
+                    auto data  = make_(i, delta);
                     auto datat = data.transient();
                     t.vt.append(datat);
                 } else {
                     auto data = make_(i, delta);
-                    t.vp = t.vp + data;
+                    t.vp      = t.vp + data;
                 }
                 i += delta;
                 if (t.step()) {
                     li = i;
                 }
                 delta = deltas.next() * 3;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
                 CHECK_VECTOR_EQUALS(t.vt, boost::irange(0u, i));
                 CHECK_VECTOR_EQUALS(t.vp, boost::irange(0u, li));
@@ -281,26 +296,27 @@ TEST_CASE("exception safety relaxed")
             auto d = dadaism::disable();
             return make_test_flex_vector<dadaist_vector_t>(i, i + delta);
         };
-        auto t = as_transient_tester(dadaist_vector_t{});
-        auto d = dadaism();
+        auto t      = as_transient_tester(dadaist_vector_t{});
+        auto d      = dadaism();
         auto deltas = magic_rotator();
         auto delta  = deltas.next();
         for (auto i = 0u, li = 0u; i < n;) {
             try {
                 if (t.transient) {
-                    auto data = make_(i, delta);
+                    auto data  = make_(i, delta);
                     auto datat = data.transient();
                     t.vt.append(std::move(datat));
                 } else {
                     auto data = make_(i, delta);
-                    t.vp = t.vp + data;
+                    t.vp      = t.vp + data;
                 }
                 i += delta;
                 if (t.step()) {
                     li = i;
                 }
                 delta = deltas.next() * 3;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
                 CHECK_VECTOR_EQUALS(t.vt, boost::irange(0u, i));
                 CHECK_VECTOR_EQUALS(t.vp, boost::irange(0u, li));
@@ -319,27 +335,28 @@ TEST_CASE("exception safety relaxed")
             auto d = dadaism::disable();
             return make_test_flex_vector<dadaist_vector_t>(i, i + delta);
         };
-        auto t = as_transient_tester(dadaist_vector_t{});
-        auto d = dadaism();
+        auto t      = as_transient_tester(dadaist_vector_t{});
+        auto d      = dadaism();
         auto deltas = magic_rotator();
         auto delta  = deltas.next();
         for (auto i = n, li = n; i > 0;) {
             delta = std::min(i, delta);
             try {
                 if (t.transient) {
-                    auto data = make_(i - delta, delta);
+                    auto data  = make_(i - delta, delta);
                     auto datat = data.transient();
                     t.vt.prepend(datat);
                 } else {
                     auto data = make_(i - delta, delta);
-                    t.vp = data + t.vp;
+                    t.vp      = data + t.vp;
                 }
                 i -= delta;
                 if (t.step()) {
                     li = i;
                 }
                 delta = deltas.next() * 3;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
                 CHECK_VECTOR_EQUALS(t.vt, boost::irange(i, n));
                 CHECK_VECTOR_EQUALS(t.vp, boost::irange(li, n));
@@ -358,27 +375,28 @@ TEST_CASE("exception safety relaxed")
             auto d = dadaism::disable();
             return make_test_flex_vector<dadaist_vector_t>(i, i + delta);
         };
-        auto t = as_transient_tester(dadaist_vector_t{});
-        auto d = dadaism();
+        auto t      = as_transient_tester(dadaist_vector_t{});
+        auto d      = dadaism();
         auto deltas = magic_rotator();
         auto delta  = deltas.next();
         for (auto i = n, li = n; i > 0;) {
             delta = std::min(i, delta);
             try {
                 if (t.transient) {
-                    auto data = make_(i - delta, delta);
+                    auto data  = make_(i - delta, delta);
                     auto datat = data.transient();
                     t.vt.prepend(std::move(datat));
                 } else {
                     auto data = make_(i - delta, delta);
-                    t.vp = data + t.vp;
+                    t.vp      = data + t.vp;
                 }
                 i -= delta;
                 if (t.step()) {
                     li = i;
                 }
                 delta = deltas.next() * 3;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
                 CHECK_VECTOR_EQUALS(t.vt, boost::irange(i, n));
                 CHECK_VECTOR_EQUALS(t.vp, boost::irange(li, n));

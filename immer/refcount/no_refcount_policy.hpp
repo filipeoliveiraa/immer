@@ -10,7 +10,8 @@
 
 namespace immer {
 
-struct disowned {};
+struct disowned
+{};
 
 /*!
  * Disables reference counting, to be used with an alternative garbage
@@ -18,12 +19,11 @@ struct disowned {};
  */
 struct no_refcount_policy
 {
-    no_refcount_policy() {};
+    no_refcount_policy(){};
     no_refcount_policy(disowned) {}
 
     void inc() {}
     bool dec() { return false; }
-    void dec_unsafe() {}
     bool unique() { return false; }
 };
 

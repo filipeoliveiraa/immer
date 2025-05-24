@@ -9,7 +9,37 @@
 #include <immer/array.hpp>
 #include <immer/array_transient.hpp>
 
-#define VECTOR_T           ::immer::array
+#define VECTOR_T ::immer::array
 #define VECTOR_TRANSIENT_T ::immer::array_transient
 
 #include "../vector_transient/generic.ipp"
+
+IMMER_RANGES_CHECK(std::ranges::contiguous_range<immer::array<std::string>>);
+IMMER_RANGES_CHECK(
+    std::ranges::contiguous_range<immer::array_transient<std::string>>);
+
+TEST_CASE("array_transient default constructor compiles")
+{
+    immer::array_transient<int> transient;
+}
+
+TEST_CASE("array provides mutable data")
+{
+    auto arr = immer::array<int>(10, 0);
+    CHECK(arr.size() == 10);
+    auto tr = arr.transient();
+    CHECK(tr.data() == arr.data());
+
+    auto d = tr.data_mut();
+    CHECK(tr.data_mut() != arr.data());
+    CHECK(tr.data() == tr.data_mut());
+    CHECK(arr.data() != tr.data_mut());
+
+    arr = tr.persistent();
+    CHECK(arr.data() == d);
+    CHECK(arr.data() == tr.data());
+
+    CHECK(tr.data_mut() != arr.data());
+    CHECK(tr.data() == tr.data_mut());
+    CHECK(arr.data() != tr.data_mut());
+}

@@ -6,11 +6,11 @@
 // See accompanying file LICENSE or copy at http://boost.org/LICENSE_1_0.txt
 //
 
-#include "test/util.hpp"
 #include "test/dada.hpp"
 #include "test/transient_tester.hpp"
+#include "test/util.hpp"
 
-#include <catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #ifndef VECTOR_T
 #error "define the vector template to use in VECTOR_T"
@@ -20,7 +20,9 @@
 #error "define the vector template to use in VECTOR_TRANSIENT_T"
 #endif
 
-template <typename V=VECTOR_T<unsigned>>
+IMMER_RANGES_CHECK(std::ranges::random_access_range<VECTOR_TRANSIENT_T<int>>);
+
+template <typename V = VECTOR_T<unsigned>>
 auto make_test_vector(unsigned min, unsigned max)
 {
     auto v = V{};
@@ -56,7 +58,7 @@ TEST_CASE("push back move")
 
     auto v = vector_t{};
 
-    auto check_move = [&] (vector_t&& x) -> vector_t&& {
+    auto check_move = [&](vector_t&& x) -> vector_t&& {
         if (vector_t::memory_policy::use_transient_rvalues)
             CHECK(&x == &v);
         else
@@ -64,12 +66,12 @@ TEST_CASE("push back move")
         return std::move(x);
     };
 
-    v = check_move(std::move(v).push_back(0));
-    v = check_move(std::move(v).push_back(1));
-    v = check_move(std::move(v).push_back(2));
+    v                = check_move(std::move(v).push_back(0));
+    v                = check_move(std::move(v).push_back(1));
+    v                = check_move(std::move(v).push_back(2));
     auto addr_before = &v[0];
-    v = check_move(std::move(v).push_back(3));
-    auto addr_after = &v[0];
+    v                = check_move(std::move(v).push_back(3));
+    auto addr_after  = &v[0];
 
     if (vector_t::memory_policy::use_transient_rvalues)
         CHECK(addr_before == addr_after);
@@ -85,7 +87,7 @@ TEST_CASE("set move")
 
     auto v = vector_t{};
 
-    auto check_move = [&] (vector_t&& x) -> vector_t&& {
+    auto check_move = [&](vector_t&& x) -> vector_t&& {
         if (vector_t::memory_policy::use_transient_rvalues)
             CHECK(&x == &v);
         else
@@ -96,8 +98,8 @@ TEST_CASE("set move")
     v = v.push_back(0);
 
     auto addr_before = &v[0];
-    v = check_move(std::move(v).set(0, 1));
-    auto addr_after = &v[0];
+    v                = check_move(std::move(v).set(0, 1));
+    auto addr_after  = &v[0];
 
     if (vector_t::memory_policy::use_transient_rvalues)
         CHECK(addr_before == addr_after);
@@ -113,7 +115,7 @@ TEST_CASE("update move")
 
     auto v = vector_t{};
 
-    auto check_move = [&] (vector_t&& x) -> vector_t&& {
+    auto check_move = [&](vector_t&& x) -> vector_t&& {
         if (vector_t::memory_policy::use_transient_rvalues)
             CHECK(&x == &v);
         else
@@ -124,7 +126,7 @@ TEST_CASE("update move")
     v = v.push_back(0);
 
     auto addr_before = &v[0];
-    v = check_move(std::move(v).update(0, [] (auto x) { return x + 1; }));
+    v = check_move(std::move(v).update(0, [](auto x) { return x + 1; }));
     auto addr_after = &v[0];
 
     if (vector_t::memory_policy::use_transient_rvalues)
@@ -141,7 +143,7 @@ TEST_CASE("take move")
 
     auto v = vector_t{};
 
-    auto check_move = [&] (vector_t&& x) -> vector_t&& {
+    auto check_move = [&](vector_t&& x) -> vector_t&& {
         if (vector_t::memory_policy::use_transient_rvalues)
             CHECK(&x == &v);
         else
@@ -152,8 +154,8 @@ TEST_CASE("take move")
     v = v.push_back(0).push_back(1);
 
     auto addr_before = &v[0];
-    v = check_move(std::move(v).take(1));
-    auto addr_after = &v[0];
+    v                = check_move(std::move(v).take(1));
+    auto addr_after  = &v[0];
 
     if (vector_t::memory_policy::use_transient_rvalues)
         CHECK(addr_before == addr_after);
@@ -183,7 +185,8 @@ TEST_CASE("exception safety")
                 ++i;
                 if (t.step())
                     li = i;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
                 CHECK_VECTOR_EQUALS(t.vt, boost::irange(0u, i));
                 CHECK_VECTOR_EQUALS(t.vp, boost::irange(0u, li));
@@ -200,8 +203,8 @@ TEST_CASE("exception safety")
 
     SECTION("update")
     {
-        using boost::join;
         using boost::irange;
+        using boost::join;
 
         auto t = as_transient_tester(make_test_vector<dadaist_vector_t>(0, n));
         auto d = dadaism{};
@@ -209,19 +212,24 @@ TEST_CASE("exception safety")
             auto s = d.next();
             try {
                 if (t.transient)
-                    t.vt.update(i, [] (auto x) { return dada(), x + 1; });
+                    t.vt.update(i, [](auto x) { return dada(), x + 1; });
                 else
-                    t.vp = t.vp.update(i, [] (auto x) { return dada(), x + 1; });
+                    t.vp = t.vp.update(i, [](auto x) { return dada(), x + 1; });
                 ++i;
                 if (t.step())
                     li = i;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
-                CHECK_VECTOR_EQUALS(t.vt, join(irange(1u, 1u + i), irange(i, n)));
-                CHECK_VECTOR_EQUALS(t.vp, join(irange(1u, 1u + li), irange(li, n)));
+                CHECK_VECTOR_EQUALS(t.vt,
+                                    join(irange(1u, 1u + i), irange(i, n)));
+                CHECK_VECTOR_EQUALS(t.vp,
+                                    join(irange(1u, 1u + li), irange(li, n)));
             } else {
-                CHECK_VECTOR_EQUALS(t.vp, join(irange(1u, 1u + i), irange(i, n)));
-                CHECK_VECTOR_EQUALS(t.vt, join(irange(1u, 1u + li), irange(li, n)));
+                CHECK_VECTOR_EQUALS(t.vp,
+                                    join(irange(1u, 1u + i), irange(i, n)));
+                CHECK_VECTOR_EQUALS(t.vt,
+                                    join(irange(1u, 1u + li), irange(li, n)));
             }
         }
         CHECK(d.happenings > 0);
@@ -248,7 +256,8 @@ TEST_CASE("exception safety")
                 if (i < delta)
                     break;
                 i -= delta;
-            } catch (dada_error) {}
+            } catch (dada_error) {
+            }
             if (t.transient) {
                 CHECK_VECTOR_EQUALS(t.vt, boost::irange(0u, i + delta));
                 CHECK_VECTOR_EQUALS(t.vp, boost::irange(0u, li));

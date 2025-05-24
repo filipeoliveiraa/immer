@@ -10,12 +10,12 @@
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("issue-33")
 {
     using Element = immer::box<std::string>;
-    auto vect = immer::vector<Element>{};
+    auto vect     = immer::vector<Element>{};
 
     // this one works fine
     for (auto i = 0; i < 100; ++i) {

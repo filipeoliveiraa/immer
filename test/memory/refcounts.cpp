@@ -6,11 +6,11 @@
 // See accompanying file LICENSE or copy at http://boost.org/LICENSE_1_0.txt
 //
 
+#include <immer/refcount/no_refcount_policy.hpp>
 #include <immer/refcount/refcount_policy.hpp>
 #include <immer/refcount/unsafe_refcount_policy.hpp>
-#include <immer/refcount/no_refcount_policy.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("no refcount has no data")
 {
@@ -42,22 +42,9 @@ void test_refcount()
         CHECK(!elem.dec());
         CHECK(elem.dec());
     }
-
-    SECTION("inc dec unsafe")
-    {
-        refcount elem{};
-        elem.inc();
-        CHECK(!elem.dec());
-        elem.inc();
-        elem.dec_unsafe();
-        CHECK(elem.dec());
-    }
 }
 
-TEST_CASE("basic refcount")
-{
-    test_refcount<immer::refcount_policy>();
-}
+TEST_CASE("basic refcount") { test_refcount<immer::refcount_policy>(); }
 
 TEST_CASE("thread unsafe refcount")
 {

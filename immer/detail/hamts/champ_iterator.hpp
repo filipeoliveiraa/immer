@@ -20,36 +20,44 @@ struct champ_iterator
     : iterator_facade<champ_iterator<T, Hash, Eq, MP, B>,
                       std::forward_iterator_tag,
                       T,
-                      const T&>
+                      const T&,
+                      std::ptrdiff_t,
+                      const T*>
 {
     using tree_t = champ<T, Hash, Eq, MP, B>;
     using node_t = typename tree_t::node_t;
-
-    struct end_t {};
+    using hash_t = typename node_t::hash_t;
 
     champ_iterator() = default;
 
+    struct end_t
+    {};
+
     champ_iterator(const tree_t& v)
-        : cur_   { v.root->values()  }
-        , end_   { v.root->values() + popcount(v.root->datamap()) }
-        , depth_ { 0 }
+        : depth_{0}
     {
+        if (v.root->datamap()) {
+            cur_ = v.root->values();
+            end_ = v.root->values() + v.root->data_count();
+        } else {
+            cur_ = end_ = nullptr;
+        }
         path_[0] = &v.root;
         ensure_valid_();
     }
 
     champ_iterator(const tree_t& v, end_t)
-        : cur_   { nullptr }
-        , end_   { nullptr }
-        , depth_ { 0 }
+        : cur_{nullptr}
+        , end_{nullptr}
+        , depth_{0}
     {
         path_[0] = &v.root;
     }
 
     champ_iterator(const champ_iterator& other)
-        : cur_   { other.cur_ }
-        , end_   { other.end_ }
-        , depth_ { other.depth_ }
+        : cur_{other.cur_}
+        , end_{other.end_}
+        , depth_{other.depth_}
     {
         std::copy(other.path_, other.path_ + depth_ + 1, path_);
     }
@@ -60,7 +68,9 @@ private:
     T* cur_;
     T* end_;
     count_t depth_;
-    node_t* const* path_[max_depth<B> + 1];
+    node_t* const* path_[max_depth<hash_t, B> + 1] = {
+        0,
+    };
 
     void increment()
     {
@@ -70,15 +80,19 @@ private:
 
     bool step_down()
     {
-        if (depth_ < max_depth<B>) {
+        if (depth_ < max_depth<hash_t, B>) {
             auto parent = *path_[depth_];
+            assert(parent);
             if (parent->nodemap()) {
                 ++depth_;
                 path_[depth_] = parent->children();
-                auto child = *path_[depth_];
-                if (depth_ < max_depth<B>) {
-                    cur_ = child->values();
-                    end_ = cur_ + popcount(child->datamap());
+                auto child    = *path_[depth_];
+                assert(child);
+                if (depth_ < max_depth<hash_t, B>) {
+                    if (child->datamap()) {
+                        cur_ = child->values();
+                        end_ = cur_ + child->data_count();
+                    }
                 } else {
                     cur_ = child->collisions();
                     end_ = cur_ + child->collision_count();
@@ -93,21 +107,24 @@ private:
     {
         while (depth_ > 0) {
             auto parent = *path_[depth_ - 1];
-            auto last   = parent->children() + popcount(parent->nodemap());
+            auto last   = parent->children() + parent->children_count();
             auto next   = path_[depth_] + 1;
             if (next < last) {
                 path_[depth_] = next;
-                auto child = *path_[depth_];
-                if (depth_ < max_depth<B>) {
-                    cur_ = child->values();
-                    end_ = cur_ + popcount(child->datamap());
+                auto child    = *path_[depth_];
+                assert(child);
+                if (depth_ < max_depth<hash_t, B>) {
+                    if (child->datamap()) {
+                        cur_ = child->values();
+                        end_ = cur_ + child->data_count();
+                    }
                 } else {
                     cur_ = child->collisions();
                     end_ = cur_ + child->collision_count();
                 }
                 return true;
             }
-            -- depth_;
+            --depth_;
         }
         return false;
     }
@@ -127,15 +144,9 @@ private:
         }
     }
 
-    bool equal(const champ_iterator& other) const
-    {
-        return cur_ == other.cur_;
-    }
+    bool equal(const champ_iterator& other) const { return cur_ == other.cur_; }
 
-    const T& dereference() const
-    {
-        return *cur_;
-    }
+    const T& dereference() const { return *cur_; }
 };
 
 } // namespace hamts

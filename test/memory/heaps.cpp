@@ -6,13 +6,13 @@
 // See accompanying file LICENSE or copy at http://boost.org/LICENSE_1_0.txt
 //
 
-#include <immer/heap/malloc_heap.hpp>
-#include <immer/heap/free_list_heap.hpp>
-#include <immer/heap/thread_local_free_list_heap.hpp>
-#include <immer/heap/gc_heap.hpp>
 #include <immer/heap/cpp_heap.hpp>
+#include <immer/heap/free_list_heap.hpp>
+#include <immer/heap/gc_heap.hpp>
+#include <immer/heap/malloc_heap.hpp>
+#include <immer/heap/thread_local_free_list_heap.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <numeric>
 
 void do_stuff_to(void* buf, std::size_t size)
@@ -90,10 +90,12 @@ TEST_CASE("free list")
 
 TEST_CASE("thread local free list")
 {
-    test_free_list_heap<immer::thread_local_free_list_heap<42u, 2, immer::malloc_heap>>();
+    test_free_list_heap<
+        immer::thread_local_free_list_heap<42u, 2, immer::malloc_heap>>();
 }
 
 TEST_CASE("unsafe free_list")
 {
-    test_free_list_heap<immer::unsafe_free_list_heap<42u, 2, immer::malloc_heap>>();
+    test_free_list_heap<
+        immer::unsafe_free_list_heap<42u, 2, immer::malloc_heap>>();
 }

@@ -10,10 +10,21 @@ Contents
    :maxdepth: 3
 
    introduction
+   design
    containers
    transients
    algorithms
+   utilities
    memory
+
+.. toctree::
+   :caption: Persistence
+   :maxdepth: 3
+
+   persist-introduction
+   persist-serialization
+   persist-transformation
+   persist-reference
 
 .. toctree::
    :caption: Experimental

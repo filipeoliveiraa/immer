@@ -1,7 +1,10 @@
+bazel-*
 build/
+build-*/
 reports/
 doc/_build
 doc/_doxygen
+bazel-*
 
 tools/travis/ssh-key
 tools/clojure/target/
@@ -19,3 +22,10 @@ __pycache__
 tools/clojure/.lein*
 
 *.pyc
+
+/result*
+
+.build
+.swiftpm
+.vscode
+.pre-commit-config.yaml
