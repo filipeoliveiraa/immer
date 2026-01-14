@@ -24,6 +24,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
+#pragma GCC diagnostic ignored "-Wnonnull"
 
 namespace immer {
 namespace detail {
@@ -467,7 +468,7 @@ struct node
         assert(n >= 1);
         auto p = make_leaf_n(n);
         IMMER_TRY {
-            new (p->leaf()) T{std::forward<U>(x)};
+            new (p->leaf()) T(std::forward<U>(x));
         }
         IMMER_CATCH (...) {
             heap::deallocate(node_t::sizeof_leaf_n(n), p);
@@ -481,7 +482,7 @@ struct node
     {
         auto p = make_leaf_e(e);
         IMMER_TRY {
-            new (p->leaf()) T{std::forward<U>(x)};
+            new (p->leaf()) T(std::forward<U>(x));
         }
         IMMER_CATCH (...) {
             heap::deallocate(node_t::max_sizeof_leaf, p);
@@ -790,7 +791,7 @@ struct node
     {
         auto dst = copy_leaf_n(n + 1, src, n);
         IMMER_TRY {
-            new (dst->leaf() + n) T{std::forward<U>(x)};
+            new (dst->leaf() + n) T(std::forward<U>(x));
         }
         IMMER_CATCH (...) {
             detail::destroy_n(dst->leaf(), n);
