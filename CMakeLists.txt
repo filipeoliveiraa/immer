@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.21)
 cmake_policy(SET CMP0048 NEW) # enable project VERSION
 cmake_policy(SET CMP0056 NEW) # honor link flags in try_compile()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -48,11 +48,11 @@ option(ENABLE_PYTHON "enable building python module" off)
 option(ENABLE_GUILE "enable building guile module" off)
 option(ENABLE_BOOST_COROUTINE "run benchmarks with boost coroutine" off)
 
-option(immer_BUILD_TESTS "Build tests" ON)
+option(immer_BUILD_TESTS "Build tests" "${PROJECT_IS_TOP_LEVEL}")
 option(immer_BUILD_PERSIST_TESTS "Build experimental persist tests" off)
-option(immer_BUILD_EXAMPLES "Build examples" ON)
-option(immer_BUILD_DOCS "Build docs" ON)
-option(immer_BUILD_EXTRAS "Build extras" ON)
+option(immer_BUILD_EXAMPLES "Build examples" "${PROJECT_IS_TOP_LEVEL}")
+option(immer_BUILD_DOCS "Build docs" "${PROJECT_IS_TOP_LEVEL}")
+option(immer_BUILD_EXTRAS "Build extras" "${PROJECT_IS_TOP_LEVEL}")
 option(immer_INSTALL_FUZZERS "Install fuzzers" off)
 option(immer_ENABLE_EXCEPTIONS
        "Always enable exceptions regardless of detected compiler support" OFF)
@@ -122,6 +122,7 @@ endif()
 
 # the library
 add_library(immer INTERFACE)
+add_library(immer::immer ALIAS immer)
 target_include_directories(
   immer
   INTERFACE $<BUILD_INTERFACE:${immer_BINARY_DIR}/>
@@ -138,7 +139,111 @@ if(immer_DISABLE_EXCEPTIONS)
   target_compile_definitions(immer INTERFACE IMMER_NO_EXCEPTIONS)
 endif()
 
-install(TARGETS immer EXPORT ImmerConfig)
+target_sources(immer PUBLIC FILE_SET HEADERS
+  FILES
+    immer/algorithm.hpp
+    immer/array.hpp
+    immer/array_transient.hpp
+    immer/atom.hpp
+    immer/box.hpp
+    immer/config.hpp
+    immer/detail/arrays/no_capacity.hpp
+    immer/detail/arrays/node.hpp
+    immer/detail/arrays/with_capacity.hpp
+    immer/detail/combine_standard_layout.hpp
+    immer/detail/hamts/bits.hpp
+    immer/detail/hamts/champ.hpp
+    immer/detail/hamts/champ_iterator.hpp
+    immer/detail/hamts/node.hpp
+    immer/detail/iterator_facade.hpp
+    immer/detail/rbts/bits.hpp
+    immer/detail/rbts/node.hpp
+    immer/detail/rbts/operations.hpp
+    immer/detail/rbts/position.hpp
+    immer/detail/rbts/rbtree.hpp
+    immer/detail/rbts/rbtree_iterator.hpp
+    immer/detail/rbts/rrbtree.hpp
+    immer/detail/rbts/rrbtree_iterator.hpp
+    immer/detail/rbts/visitor.hpp
+    immer/detail/ref_count_base.hpp
+    immer/detail/type_traits.hpp
+    immer/detail/util.hpp
+    immer/experimental/detail/dvektor_impl.hpp
+    immer/experimental/dvektor.hpp
+    immer/extra/cereal/immer_array.hpp
+    immer/extra/cereal/immer_box.hpp
+    immer/extra/cereal/immer_map.hpp
+    immer/extra/cereal/immer_set.hpp
+    immer/extra/cereal/immer_table.hpp
+    immer/extra/cereal/immer_vector.hpp
+    immer/extra/io.hpp
+    immer/extra/persist/cereal/archives.hpp
+    immer/extra/persist/cereal/load.hpp
+    immer/extra/persist/cereal/policy.hpp
+    immer/extra/persist/cereal/save.hpp
+    immer/extra/persist/detail/alias.hpp
+    immer/extra/persist/detail/array/pool.hpp
+    immer/extra/persist/detail/box/pool.hpp
+    immer/extra/persist/detail/cereal/compact_map.hpp
+    immer/extra/persist/detail/cereal/input_archive_util.hpp
+    immer/extra/persist/detail/cereal/persistable.hpp
+    immer/extra/persist/detail/cereal/pools.hpp
+    immer/extra/persist/detail/cereal/wrap.hpp
+    immer/extra/persist/detail/champ/champ.hpp
+    immer/extra/persist/detail/champ/input.hpp
+    immer/extra/persist/detail/champ/output.hpp
+    immer/extra/persist/detail/champ/pool.hpp
+    immer/extra/persist/detail/champ/traits.hpp
+    immer/extra/persist/detail/common/pool.hpp
+    immer/extra/persist/detail/names.hpp
+    immer/extra/persist/detail/node_ptr.hpp
+    immer/extra/persist/detail/rbts/input.hpp
+    immer/extra/persist/detail/rbts/output.hpp
+    immer/extra/persist/detail/rbts/pool.hpp
+    immer/extra/persist/detail/rbts/traits.hpp
+    immer/extra/persist/detail/rbts/traverse.hpp
+    immer/extra/persist/detail/traits.hpp
+    immer/extra/persist/detail/transform.hpp
+    immer/extra/persist/detail/type_traverse.hpp
+    immer/extra/persist/errors.hpp
+    immer/extra/persist/hash_container_conversion.hpp
+    immer/extra/persist/transform.hpp
+    immer/extra/persist/types.hpp
+    immer/extra/persist/xxhash/xxhash.hpp
+    immer/extra/persist/xxhash/xxhash_64.cpp
+    immer/flex_vector.hpp
+    immer/flex_vector_transient.hpp
+    immer/heap/cpp_heap.hpp
+    immer/heap/debug_size_heap.hpp
+    immer/heap/free_list_heap.hpp
+    immer/heap/gc_heap.hpp
+    immer/heap/heap_policy.hpp
+    immer/heap/identity_heap.hpp
+    immer/heap/malloc_heap.hpp
+    immer/heap/split_heap.hpp
+    immer/heap/tags.hpp
+    immer/heap/thread_local_free_list_heap.hpp
+    immer/heap/unsafe_free_list_heap.hpp
+    immer/lock/no_lock_policy.hpp
+    immer/lock/spinlock_policy.hpp
+    immer/map.hpp
+    immer/map_transient.hpp
+    immer/memory_policy.hpp
+    immer/refcount/enable_intrusive_ptr.hpp
+    immer/refcount/no_refcount_policy.hpp
+    immer/refcount/refcount_policy.hpp
+    immer/refcount/unsafe_refcount_policy.hpp
+    immer/set.hpp
+    immer/set_transient.hpp
+    immer/table.hpp
+    immer/table_transient.hpp
+    immer/transience/gc_transience_policy.hpp
+    immer/transience/no_transience_policy.hpp
+    immer/vector.hpp
+    immer/vector_transient.hpp
+)
+
+install(TARGETS immer EXPORT ImmerConfig FILE_SET HEADERS)
 install(EXPORT ImmerConfig DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Immer")
 install(DIRECTORY immer DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
